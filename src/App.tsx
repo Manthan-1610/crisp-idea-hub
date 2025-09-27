@@ -15,26 +15,28 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/ideas" element={<Ideas />} />
-          <Route path="/story-builder" element={<StoryBuilder />} />
-          <Route path="/backlog" element={<Backlog />} />
-          <Route path="/mvp" element={<MVP />} />
-          <Route path="/sprint-readiness" element={<SprintReadiness />} />
-          <Route path="/exports" element={<Exports />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/ideas" element={<Ideas />} />
+            <Route path="/story-builder" element={<StoryBuilder />} />
+            <Route path="/backlog" element={<Backlog />} />
+            <Route path="/mvp" element={<MVP />} />
+            <Route path="/sprint-readiness" element={<SprintReadiness />} />
+            <Route path="/exports" element={<Exports />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
