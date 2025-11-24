@@ -140,6 +140,17 @@ function MVPCard({ mvp }: { mvp: MVP }) {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "completed": return "Completed";
+      case "in-progress": return "In Progress";
+      case "planning": return "Planning";
+      case "ready-for-sprint": return "Ready for Sprint";
+      case "requirements-complete": return "Requirements Complete";
+      default: return status;
+    }
+  };
+
   const mustHavePoints = mvp.stories
     .filter(story => story.priority === "must-have")
     .reduce((sum, story) => sum + story.storyPoints, 0);
