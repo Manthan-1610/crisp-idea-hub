@@ -28,7 +28,7 @@ interface UserStory {
   title: string;
   priority: "must-have" | "nice-to-have";
   storyPoints: number;
-  status: "todo" | "in-progress" | "done";
+  status: "draft" | "groomed" | "sprint-ready";
 }
 
 const mockMVPs: MVP[] = [
@@ -39,9 +39,9 @@ const mockMVPs: MVP[] = [
     targetDate: "2024-02-15",
     status: "completed",
     stories: [
-      { id: "US-001", title: "User Registration", priority: "must-have", storyPoints: 5, status: "done" },
-      { id: "US-002", title: "User Login", priority: "must-have", storyPoints: 3, status: "done" },
-      { id: "US-003", title: "Password Reset", priority: "nice-to-have", storyPoints: 3, status: "done" },
+      { id: "US-001", title: "User Registration", priority: "must-have", storyPoints: 5, status: "sprint-ready" },
+      { id: "US-002", title: "User Login", priority: "must-have", storyPoints: 3, status: "sprint-ready" },
+      { id: "US-003", title: "Password Reset", priority: "nice-to-have", storyPoints: 3, status: "sprint-ready" },
     ],
     totalPoints: 11
   },
@@ -52,10 +52,10 @@ const mockMVPs: MVP[] = [
     targetDate: "2024-03-01",
     status: "in-progress",
     stories: [
-      { id: "US-004", title: "Product Listing", priority: "must-have", storyPoints: 8, status: "done" },
-      { id: "US-005", title: "Product Search", priority: "must-have", storyPoints: 5, status: "in-progress" },
-      { id: "US-006", title: "Product Filters", priority: "nice-to-have", storyPoints: 5, status: "todo" },
-      { id: "US-007", title: "Product Details", priority: "must-have", storyPoints: 3, status: "in-progress" },
+      { id: "US-004", title: "Product Listing", priority: "must-have", storyPoints: 8, status: "sprint-ready" },
+      { id: "US-005", title: "Product Search", priority: "must-have", storyPoints: 5, status: "groomed" },
+      { id: "US-006", title: "Product Filters", priority: "nice-to-have", storyPoints: 5, status: "draft" },
+      { id: "US-007", title: "Product Details", priority: "must-have", storyPoints: 3, status: "groomed" },
     ],
     totalPoints: 21
   },
@@ -66,10 +66,10 @@ const mockMVPs: MVP[] = [
     targetDate: "2024-03-20",
     status: "planning",
     stories: [
-      { id: "US-008", title: "Add to Cart", priority: "must-have", storyPoints: 5, status: "todo" },
-      { id: "US-009", title: "Cart Management", priority: "must-have", storyPoints: 8, status: "todo" },
-      { id: "US-010", title: "Checkout Process", priority: "must-have", storyPoints: 13, status: "todo" },
-      { id: "US-011", title: "Payment Integration", priority: "must-have", storyPoints: 13, status: "todo" },
+      { id: "US-008", title: "Add to Cart", priority: "must-have", storyPoints: 5, status: "draft" },
+      { id: "US-009", title: "Cart Management", priority: "must-have", storyPoints: 8, status: "draft" },
+      { id: "US-010", title: "Checkout Process", priority: "must-have", storyPoints: 13, status: "draft" },
+      { id: "US-011", title: "Payment Integration", priority: "must-have", storyPoints: 13, status: "draft" },
     ],
     totalPoints: 39
   }
@@ -97,9 +97,9 @@ function SortableStoryCard({ story }: { story: UserStory }) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "done": return "status-ready";
-      case "in-progress": return "status-progress";
-      case "todo": return "status-draft";
+      case "sprint-ready": return "status-ready";
+      case "groomed": return "status-progress";
+      case "draft": return "status-draft";
       default: return "status-draft";
     }
   };
@@ -144,11 +144,12 @@ function MVPCard({ mvp }: { mvp: MVP }) {
     .filter(story => story.priority === "must-have")
     .reduce((sum, story) => sum + story.storyPoints, 0);
 
-  const completedPoints = mvp.stories
-    .filter(story => story.status === "done")
+  // Progress based on requirements readiness (groomed + sprint-ready stories)
+  const readyPoints = mvp.stories
+    .filter(story => story.status === "groomed" || story.status === "sprint-ready")
     .reduce((sum, story) => sum + story.storyPoints, 0);
 
-  const progress = mvp.totalPoints > 0 ? (completedPoints / mvp.totalPoints) * 100 : 0;
+  const progress = mvp.totalPoints > 0 ? (readyPoints / mvp.totalPoints) * 100 : 0;
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -170,7 +171,7 @@ function MVPCard({ mvp }: { mvp: MVP }) {
         {/* Progress */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>Progress</span>
+            <span>Requirements Readiness</span>
             <span>{Math.round(progress)}%</span>
           </div>
           <div className="w-full bg-muted rounded-full h-2">
