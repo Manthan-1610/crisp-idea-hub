@@ -18,7 +18,7 @@ interface MVP {
   name: string;
   description: string;
   targetDate: string;
-  status: "planning" | "in-progress" | "completed";
+  status: "planning" | "ready-for-sprint" | "requirements-complete";
   stories: UserStory[];
   totalPoints: number;
 }
@@ -162,7 +162,7 @@ function MVPCard({ mvp }: { mvp: MVP }) {
             <CardDescription className="mt-1">{mvp.description}</CardDescription>
           </div>
           <Badge className={`${getStatusColor(mvp.status)} border`}>
-            {mvp.status}
+            {getStatusLabel(mvp.status)}
           </Badge>
         </div>
       </CardHeader>
@@ -248,7 +248,7 @@ export default function MVP() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">MVP & Release Planning</h1>
             <p className="text-muted-foreground">
-              Organize user stories into minimum viable products and releases
+              Group user stories into MVPs - track requirements readiness before sprint planning
             </p>
           </div>
           
@@ -324,7 +324,7 @@ export default function MVP() {
             <CardContent>
               <div className="text-2xl font-bold">{mvps.length}</div>
               <p className="text-xs text-muted-foreground">
-                {mvps.filter(mvp => mvp.status === "completed").length} completed
+                {mvps.filter(mvp => mvp.status === "requirements-complete").length} requirements complete
               </p>
             </CardContent>
           </Card>
