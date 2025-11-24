@@ -8,17 +8,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import { motion } from "framer-motion";
-import { Wand2, Save, RotateCcw, Copy, Eye } from "lucide-react";
+import { Wand2, Save, RotateCcw, Eye } from "lucide-react";
+import { storage } from "@/lib/storage";
+import { UserStory } from "@/types";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function StoryBuilder() {
+  const navigate = useNavigate();
   const [story, setStory] = useState({
     role: "",
     feature: "",
     benefit: "",
     acceptanceCriteria: "",
-    priority: "medium",
+    priority: "medium" as const,
     estimate: "",
+    businessValue: 50,
     tags: ""
   });
 
@@ -39,11 +46,34 @@ export default function StoryBuilder() {
     { value: "critical", label: "Critical", color: "priority-critical" }
   ];
 
-  const estimates = ["1", "2", "3", "5", "8", "13", "21", "?"];
+  const estimates = ["1", "2", "3", "5", "8", "13", "21"];
 
   const handleSave = () => {
-    console.log("Saving story:", story);
-    // In real app, this would save to backend and add to backlog
+    if (!story.role || !story.feature || !story.benefit || !story.estimate) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const newStory: UserStory = {
+      id: `US-${Date.now().toString().slice(-3)}`,
+      title: `${story.role} - ${story.feature.slice(0, 30)}`,
+      role: story.role,
+      feature: story.feature,
+      benefit: story.benefit,
+      acceptanceCriteria: story.acceptanceCriteria,
+      status: "draft",
+      priority: story.priority,
+      storyPoints: parseInt(story.estimate),
+      businessValue: story.businessValue,
+      tags: story.tags.split(",").map(t => t.trim()).filter(Boolean),
+      mvpId: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    storage.addStory(newStory);
+    toast.success("Story saved to backlog!");
+    
     setStory({
       role: "",
       feature: "",
@@ -51,18 +81,21 @@ export default function StoryBuilder() {
       acceptanceCriteria: "",
       priority: "medium",
       estimate: "",
+      businessValue: 50,
       tags: ""
     });
+    
+    setTimeout(() => navigate("/backlog"), 1000);
   };
 
   const handleAIAssist = () => {
-    // Mock AI enhancement
     if (story.role && story.feature) {
       setStory(prev => ({
         ...prev,
         benefit: prev.benefit || `I can ${prev.feature.toLowerCase()} efficiently and effectively`,
         acceptanceCriteria: prev.acceptanceCriteria || `Given I am a ${prev.role.toLowerCase()}\nWhen I ${prev.feature.toLowerCase()}\nThen I should see the expected result\nAnd the system should respond appropriately`
       }));
+      toast.success("AI suggestions applied!");
     }
   };
 
@@ -81,7 +114,7 @@ export default function StoryBuilder() {
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">User Story Builder</h1>
           <p className="text-muted-foreground">
-            Create structured user stories with acceptance criteria using the standard template
+            Create structured user stories with acceptance criteria and business value
           </p>
         </div>
 
@@ -108,7 +141,7 @@ export default function StoryBuilder() {
               <CardContent className="space-y-4">
                 {/* Role */}
                 <div className="space-y-2">
-                  <Label htmlFor="role">As a...</Label>
+                  <Label htmlFor="role">As a... *</Label>
                   <Select value={story.role} onValueChange={(value) => setStory(prev => ({ ...prev, role: value }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a role" />
@@ -123,7 +156,7 @@ export default function StoryBuilder() {
 
                 {/* Feature */}
                 <div className="space-y-2">
-                  <Label htmlFor="feature">I want...</Label>
+                  <Label htmlFor="feature">I want... *</Label>
                   <Textarea
                     id="feature"
                     placeholder="Describe the desired functionality or feature"
@@ -135,7 +168,7 @@ export default function StoryBuilder() {
 
                 {/* Benefit */}
                 <div className="space-y-2">
-                  <Label htmlFor="benefit">So that...</Label>
+                  <Label htmlFor="benefit">So that... *</Label>
                   <Textarea
                     id="benefit"
                     placeholder="Explain the value or benefit this provides"
@@ -164,14 +197,14 @@ export default function StoryBuilder() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Priority</Label>
-                    <Select value={story.priority} onValueChange={(value) => setStory(prev => ({ ...prev, priority: value }))}>
+                    <Select value={story.priority} onValueChange={(value: any) => setStory(prev => ({ ...prev, priority: value }))}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {priorities.map((priority) => (
                           <SelectItem key={priority.value} value={priority.value}>
-                            <span className={priority.color}>{priority.label}</span>
+                            {priority.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -179,7 +212,7 @@ export default function StoryBuilder() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Story Points</Label>
+                    <Label>Story Points *</Label>
                     <Select value={story.estimate} onValueChange={(value) => setStory(prev => ({ ...prev, estimate: value }))}>
                       <SelectTrigger>
                         <SelectValue placeholder="Estimate" />
@@ -191,6 +224,25 @@ export default function StoryBuilder() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                {/* Business Value Slider */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Business Value</Label>
+                    <span className="text-sm font-medium">{story.businessValue}</span>
+                  </div>
+                  <Slider
+                    value={[story.businessValue]}
+                    onValueChange={(value) => setStory(prev => ({ ...prev, businessValue: value[0] }))}
+                    min={1}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Rate the business value from 1 (low) to 100 (high)
+                  </p>
                 </div>
 
                 {/* Tags */}
@@ -217,14 +269,11 @@ export default function StoryBuilder() {
                     acceptanceCriteria: "",
                     priority: "medium",
                     estimate: "",
+                    businessValue: 50,
                     tags: ""
                   })} className="gap-2">
                     <RotateCcw className="h-4 w-4" />
                     Reset
-                  </Button>
-                  <Button variant="outline" className="gap-2">
-                    <Copy className="h-4 w-4" />
-                    Copy
                   </Button>
                 </div>
               </CardContent>
@@ -284,6 +333,10 @@ export default function StoryBuilder() {
                         <Badge variant="outline">{story.estimate}</Badge>
                       </div>
                     )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Business Value:</span>
+                      <Badge variant="outline">{story.businessValue}/100</Badge>
+                    </div>
                     {story.tags && (
                       <div className="space-y-1">
                         <span className="text-sm text-muted-foreground">Tags:</span>
