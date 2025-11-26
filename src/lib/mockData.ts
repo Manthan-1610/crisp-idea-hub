@@ -1,5 +1,6 @@
 // Mock data for initial setup
 import { UserStory, MVP } from "@/types";
+import { storage } from "./storage";
 
 export const mockStories: UserStory[] = [
   {
@@ -157,9 +158,9 @@ export const mockMVPs: MVP[] = [
 
 // Initialize storage with mock data if empty
 export function initializeMockData() {
-  const { stories, mvps } = require("./storage").storage.getData();
+  const { stories, mvps } = storage.getData();
   if (stories.length === 0 && mvps.length === 0) {
-    require("./storage").storage.setData({
+    storage.setData({
       stories: mockStories,
       mvps: mockMVPs
     });
